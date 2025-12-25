@@ -95,13 +95,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- DATABASE ---
+# --- DATABASE ---
 DATABASES = {
     'default': dj_database_url.config(
+        # This is your local fallback
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=not DEBUG  # Only require SSL when using PostgreSQL on Render
     )
 }
+
+# Add this logic to ONLY apply SSL if we are NOT using SQLite
+if 'sqlite' not in DATABASES['default']['ENGINE']:
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
 
 # --- AUTH ---
 AUTH_USER_MODEL = 'users.User'
