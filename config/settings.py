@@ -4,14 +4,14 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-c3tm&u&3b!ydu=9sd7^w-v9dc+-3ewhbe0tygr5ka&ue3d7&n-'
+# --- SECRET KEY & DEBUG ---
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-c3tm&u&3b!ydu=9sd7^w-v9dc+-3ewhbe0tygr5ka&ue3d7&n-')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'  # keep True locally, False in production via env var
 
-DEBUG = True
+# --- HOSTS ---
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')  # e.g., "your-backend.onrender.com"
 
-ALLOWED_HOSTS = ['*'] # Added for easier local testing
-
-# Application definition
-
+# --- APPLICATIONS ---
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -31,11 +31,12 @@ INSTALLED_APPS = [
     'apps.orders',
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # MUST be at the top
+    'corsheaders.middleware.CorsMiddleware',  # MUST be at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware', # CommonMiddleware must follow CorsMiddleware
+    'django.middleware.common.CommonMiddleware',  # after CorsMiddleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -44,6 +45,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -54,7 +56,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media', # Added for images
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -62,6 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# --- DATABASE ---
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -69,8 +72,8 @@ DATABASES = {
     }
 }
 
-# Auth config - Path updated to include the 'apps' prefix
-AUTH_USER_MODEL = 'users.User' 
+# --- AUTH ---
+AUTH_USER_MODEL = 'users.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -79,6 +82,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# --- LANGUAGE & TIME ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -87,22 +95,19 @@ USE_TZ = True
 # --- STATIC & MEDIA FILES ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # for Render collectstatic
 
-# This is what handles your shoe images
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# --- CORS & SECURITY ---
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Your Vite/React port
-    "http://127.0.0.1:5173",
-]
-CORS_ALLOW_ALL_ORIGINS = True # Set to False and use CORS_ALLOWED_ORIGINS in production
+# --- CORS ---
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
+CORS_ALLOW_ALL_ORIGINS = True if os.environ.get('DJANGO_DEBUG', 'True') == 'True' else False
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DRF Config
+# --- DRF & JWT ---
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -112,14 +117,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
-AUTH_USER_MODEL = 'users.User'
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-]
+
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
-# Add this to ensure Django uses your custom model project-wide
