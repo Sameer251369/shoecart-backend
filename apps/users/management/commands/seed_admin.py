@@ -6,20 +6,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         User = get_user_model()
         
-        # This pulls the EXACT values you typed into the Render dashboard
-        username = os.getenv('DJANGO_SUPERUSER_USERNAME', 'admin')
-        email = os.getenv('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
-        password = os.getenv('DJANGO_SUPERUSER_PASSWORD', 'Password123!')
+        email = os.getenv('DJANGO_SUPERUSER_EMAIL')
+        username = os.getenv('DJANGO_SUPERUSER_USERNAME')
+        password = os.getenv('DJANGO_SUPERUSER_PASSWORD')
 
-        # Delete any existing conflicts
+        # This DELETE is the most important part to clear old "bad" data
         User.objects.filter(email=email).delete()
         User.objects.filter(username=username).delete()
 
-        # Create the superuser using your Render settings
+        # Create fresh
         admin_user = User.objects.create_superuser(
-            username=username, 
-            email=email, 
+            username=username,
+            email=email,
             password=password
         )
-        
-        self.stdout.write(self.style.SUCCESS(f'SUCCESS: Admin created using Render Environment Variables!'))
+        self.stdout.write(self.style.SUCCESS(f'DELETED OLD AND CREATED NEW ADMIN: {email}'))
