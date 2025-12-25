@@ -101,7 +101,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- CORS ---
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173','https://shoecart1.netlify.app/').split(',')
 CORS_ALLOW_ALL_ORIGINS = True if os.environ.get('DJANGO_DEBUG', 'True') == 'True' else False
 CORS_ALLOW_CREDENTIALS = True
 
