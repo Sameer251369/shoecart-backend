@@ -11,8 +11,8 @@ python manage.py collectstatic --no-input
 # Apply database migrations
 python manage.py migrate
 
-# Run your custom command to create the admin user
-python manage.py seed_admin
+# Load your product data automatically
+python manage.py loaddata seed_data.json
 
-# Optional: Load your product data if you have the json file
-# python manage.py loaddata seed_data.json
+# If you have a custom command for the admin, keep it:
+python manage.py seed_admin
