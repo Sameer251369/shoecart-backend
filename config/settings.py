@@ -1,19 +1,33 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url  # Essential for production DB connections
+import dj_database_url
 
 # --- PATHS ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SECRET KEY & DEBUG ---
-# Never hardcode the real secret key in production
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-default-change-this-in-env')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
-# --- HOSTS ---
-# In production, set this to "your-backend.onrender.com" via environment variables
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# --- HOSTS & SECURITY ---
+# List your production Render URL and local environments
+ALLOWED_HOSTS = [
+    'shoecart-backend1.onrender.com', 
+    'localhost', 
+    '127.0.0.1'
+]
+
+# Automatically add Render's dynamic hostname if available
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CSRF Trusted Origins (Crucial for Django 4.0+ and cross-domain requests)
+CSRF_TRUSTED_ORIGINS = [
+    "https://shoecart1.netlify.app",
+    "https://shoecart-backend1.onrender.com"
+]
 
 # --- APPLICATIONS ---
 INSTALLED_APPS = [
@@ -38,9 +52,9 @@ INSTALLED_APPS = [
 
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Top
+    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For serving static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,11 +95,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- DATABASE ---
-# Automatically uses PostgreSQL on Render/Railway via DATABASE_URL, else SQLite locally
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
+        conn_max_age=600,
+        ssl_require=not DEBUG  # Only require SSL when using PostgreSQL on Render
     )
 }
 
@@ -98,15 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
-
-# --- LANGUAGE & TIME ---
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-# --- STATIC & MEDIA FILES ---
+# --- STATIC & MEDIA ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
@@ -118,20 +124,17 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- CORS ---
-# Fixed the logic to strictly use your Netlify URL and local dev
 CORS_ALLOWED_ORIGINS = [
     "https://shoecart1.netlify.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-# Add any extra origins from environment variables if they exist
+
 env_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
 if env_origins:
     CORS_ALLOWED_ORIGINS.extend(env_origins.split(','))
 
 CORS_ALLOW_CREDENTIALS = True
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- DRF & JWT ---
 REST_FRAMEWORK = {
@@ -152,3 +155,5 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
