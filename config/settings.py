@@ -115,7 +115,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # --- STATIC & MEDIA ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# This prevents errors if the local 'static' folder is missing
+static_path = os.path.join(BASE_DIR, 'static')
+if os.path.exists(static_path):
+    STATICFILES_DIRS = [static_path]
+else:
+    STATICFILES_DIRS = []
 
 # Enable WhiteNoise compression and caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
