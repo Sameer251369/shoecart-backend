@@ -2,12 +2,13 @@ from django.urls import path
 from .views import ProductListAPIView, ProductDetailAPIView, CategoryListAPIView
 
 urlpatterns = [
-    # This matches: /api/products/
+    # 1. List & Search: /api/products/
+    # Handles ?search=... and ?category=...
     path("", ProductListAPIView.as_view(), name="product-list"), 
     
-    # This matches: /api/products/categories/
+    # 2. Navbar Categories: /api/products/categories/
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),
     
-    # This matches: /api/products/1/
+    # 3. Product Details: /api/products/<id>/
     path("<int:pk>/", ProductDetailAPIView.as_view(), name="product-detail"),
 ]

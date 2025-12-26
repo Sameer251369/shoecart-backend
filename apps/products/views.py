@@ -6,30 +6,28 @@ from django.db.models import Q # For search logic
 
 from .models import Product, Category # Make sure you have a Category model
 from .serializers import ProductSerializer, CategorySerializer # Create a CategorySerializer
-
 class ProductListAPIView(APIView):
     def get(self, request):
-        # 1. Get query parameters from the URL
         search_query = request.query_params.get('search', None)
-        category_slug = request.query_params.get('category', None)
+        category_name = request.query_params.get('category', None) # Renamed for clarity
         
-        # 2. Start with active products
         products = Product.objects.filter(is_active=True)
         
-        # 3. Apply Category Filter
-        if category_slug:
-            products = products.filter(category__slug=category_slug)
+        # FIX: Filter by name (case-insensitive) instead of slug
+        if category_name:
+            products = products.filter(category__name__iexact=category_name)
             
-        # 4. Apply Search Filter (searches name or description)
         if search_query:
             products = products.filter(
                 Q(name__icontains=search_query) | 
                 Q(description__icontains=search_query)
             )
+        
+        # Optimization: Add select_related and prefetch_related here too!
+        products = products.select_related('category').prefetch_related('images')
             
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 # NEW: Add this so the Navbar can fetch categories
 class CategoryListAPIView(APIView):
     def get(self, request):

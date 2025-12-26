@@ -1,28 +1,16 @@
-from rest_framework import serializers
-from .models import Product, ProductImage, Category
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'slug']
-
-
-class ProductImageSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ProductImage
-        fields = ['id', 'image', 'alt_text']
-
-    def get_image(self, obj):
-        return obj.image.url if obj.image else None
-
-
+# serializers.py
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
+    # Add a flat field for the first image to simplify frontend access
+    thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'stock', 'is_active', 'images', 'category']
+        fields = ['id', 'name', 'price', 'stock', 'is_active', 'images', 'category', 'thumbnail']
+
+    def get_thumbnail(self, obj):
+        first_image = obj.images.first()
+        if first_image and first_image.image:
+            return first_image.image.url
+        return None
