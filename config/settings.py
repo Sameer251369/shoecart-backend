@@ -11,19 +11,16 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-default-change
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
 # --- HOSTS & SECURITY ---
-# List your production Render URL and local environments
 ALLOWED_HOSTS = [
     'shoecart-backend1.onrender.com', 
     'localhost', 
     '127.0.0.1'
 ]
 
-# Automatically add Render's dynamic hostname if available
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# CSRF Trusted Origins (Crucial for Django 4.0+ and cross-domain requests)
 CSRF_TRUSTED_ORIGINS = [
     "https://shoecart1.netlify.app",
     "https://shoecart-backend1.onrender.com"
@@ -36,7 +33,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    
+    # Cloudinary storage needs to be above staticfiles
+    'cloudinary_storage', 
     'django.contrib.staticfiles',
+    'cloudinary',
 
     # third party
     'rest_framework',
@@ -52,9 +53,9 @@ INSTALLED_APPS = [
 
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -95,16 +96,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- DATABASE ---
-# --- DATABASE ---
 DATABASES = {
     'default': dj_database_url.config(
-        # This is your local fallback
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
     )
 }
 
-# Add this logic to ONLY apply SSL if we are NOT using SQLite
 if 'sqlite' not in DATABASES['default']['ENGINE']:
     DATABASES['default']['OPTIONS'] = {
         'sslmode': 'require',
@@ -122,19 +120,25 @@ AUTH_PASSWORD_VALIDATORS = [
 # --- STATIC & MEDIA ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# This prevents errors if the local 'static' folder is missing
 static_path = os.path.join(BASE_DIR, 'static')
 if os.path.exists(static_path):
     STATICFILES_DIRS = [static_path]
 else:
     STATICFILES_DIRS = []
 
-# Enable WhiteNoise compression and caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 WHITENOISE_USE_FINDERS = True
 
+# --- CLOUDINARY MEDIA SETTINGS ---
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# This tells Django to use Cloudinary for media files
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 
 # --- CORS ---
 CORS_ALLOWED_ORIGINS = [
@@ -170,3 +174,10 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
