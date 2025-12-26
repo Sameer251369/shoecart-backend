@@ -2,11 +2,13 @@
 # exit on error
 set -o errexit
 
-# Use poetry if that is your tool
-poetry install  
+# Use pip instead of poetry
+pip install -r requirements.txt
 
 # Standard Django commands
 python manage.py collectstatic --no-input
 python manage.py migrate
-python manage.py loaddata seed_data.json
-python manage.py seed_admin
+
+# Only keep these if you actually have these files/commands in your project
+# python manage.py loaddata seed_data.json
+# python manage.py seed_admin
