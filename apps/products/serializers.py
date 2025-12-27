@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from apps.products.models import Product, Category, ProductImage
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -33,7 +34,9 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_thumbnail(self, obj):
-        images = getattr(obj, 'images', [])
-        if images:
-            return images[0].image.url
+        """Get the first image URL or None"""
+        # FIXED: Use .all() then .first() instead of [0]
+        images = obj.images.all()
+        if images.exists():
+            return images.first().image.url
         return None
