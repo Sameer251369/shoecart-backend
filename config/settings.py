@@ -131,7 +131,6 @@ WHITENOISE_USE_FINDERS = True
 
 # --- CLOUDINARY MEDIA SETTINGS ---
 MEDIA_URL = '/media/'
-# This tells Django to use Cloudinary for media files
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CLOUDINARY_STORAGE = {
@@ -140,38 +139,50 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# --- CORS ---
-CORS_ALLOWED_ORIGINS = [
-    "https://shoecart1.netlify.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# --- CORS CONFIGURATION ---
+# Different settings for development vs production
+if DEBUG:
+    # In development: Allow all localhost origins
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+else:
+    # In production: Only allow specific origins
+    CORS_ALLOWED_ORIGINS = [
+        "https://shoecart1.netlify.app",
+    ]
+    
+    # Allow additional origins from environment variable
+    env_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
+    if env_origins:
+        CORS_ALLOWED_ORIGINS.extend(env_origins.split(','))
+    
+    CORS_ALLOW_CREDENTIALS = True
 
-env_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
-if env_origins:
-    CORS_ALLOWED_ORIGINS.extend(env_origins.split(','))
+# Alternative: If you want to specify specific ports even in development:
+# CORS_ALLOWED_ORIGINS = [
+#     "https://shoecart1.netlify.app",
+#     "http://localhost:5173",
+#     "http://localhost:5174",
+#     "http://127.0.0.1:5173",
+#     "http://127.0.0.1:5174",
+# ]
 
-CORS_ALLOW_CREDENTIALS = True
-
-
+# --- REST FRAMEWORK ---
 REST_FRAMEWORK = {
-   
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-
-   
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
-
-
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 8,
+    # PAGINATION DISABLED - Products will return as simple array
+    # Re-enable if you want pagination and update frontend to handle it
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 8,
 }
 
-
+# --- JWT SETTINGS ---
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -179,8 +190,6 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
-    
-    # ADD THESE LINES:
     'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.CustomTokenObtainPairSerializer',
 }
 
